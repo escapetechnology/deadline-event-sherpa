@@ -1,0 +1,210 @@
+[State]
+Type=Enum
+Items=Global Enabled;Opt-In;Disabled
+Category=Options
+CategoryOrder=0
+Index=0
+Label=State
+Default=Disabled
+Description=How this event plug-in should respond to events. If Global, all jobs and Workers will trigger the events for this plugin. If Opt-In, jobs and Workers can choose to trigger the events for this plugin. If Disabled, no events are triggered for this plugin.
+
+[APIKey]
+Type=string
+Category=Authentication
+CategoryOrder=1
+Index=0
+Label=API key
+Default=
+Description=Your Sherpa API key.
+
+[APISecret]
+Type=password
+Category=Authentication
+CategoryOrder=1
+Index=1
+Label=API secret
+Default=
+Description=Your Sherpa API secret.
+
+[ProjectID]
+Type=string
+Category=Project
+CategoryOrder=2
+Index=0
+Label=Project ID
+Default=
+Description=Your Sherpa project ID.
+
+[EnablePowerManagement]
+Type=boolean
+Category=Features
+CategoryOrder=3
+Index=0
+Label=Enable power management
+Default=True
+Description=<html><head/><body><p>Whether or not you wish to enable the power management feature, which starts/stops Sherpa resources.</p></body></html>
+
+[EnableSpotManagement]
+Type=boolean
+Category=Features
+CategoryOrder=3
+Index=1
+Label=Enable spot management
+Default=False
+Description=<html><head/><body><p>Whether or not you wish to enable the spot management feature, which creates/deletes Sherpa <b>spot</b> resources.</p></body></html>
+
+[ResourceName]
+Type=string
+Validator=\w*
+Category=Basic configuration for spot management
+CategoryOrder=4
+Index=0
+Label=Resource name
+Default=DL-SHERPA
+Description=The name of the resource(s) that will be created. FYI: The plugin will add some random hex values to each one to make it unique.
+
+[SizeID]
+Type=string
+Category=Basic configuration for spot management
+CategoryOrder=4
+Index=1
+Label=New resource Sherpa size ID
+Default=
+Description=The Sherpa size ID to be used when requesting new resource(s).
+
+[ImageID]
+Type=string
+Category=Basic configuration for spot management
+CategoryOrder=4
+Index=2
+Label=New resource Sherpa image ID
+Default=
+Description=The Sherpa image ID to be used when requesting new resource(s).
+
+[VolumeSize]
+Type=integer
+Minimum=32
+Maximum=10000
+Category=Basic configuration for spot management
+CategoryOrder=4
+Index=3
+Label=Volume size (in GB)
+Default=32
+Description=The volume size to use upon resource creation, in GB.
+
+[AdditionalNumberOfResourcesPerCycle]
+Type=integer
+Category=Basic configuration for spot management
+CategoryOrder=4
+Index=4
+Label=Maximum number of resources added per cycle
+Default=10
+Minimum=1
+Maximum=100
+Description=The maximum number of additional resources per house cleaning cycle. Default: 10.
+
+[MaximumNumberOfResources]
+Type=integer
+Category=Basic configuration for spot management
+CategoryOrder=4
+Index=5
+Label=Maximum number of resources
+Default=20
+Minimum=1
+Maximum=50
+Description=The maximum number of resources this plugin can request. Default: 20.
+
+[Logging]
+Type=enum
+Items=Off;Standard;Verbose;Debug
+Category=Advanced configuration for spot management
+CategoryOrder=5
+Index=0
+Label=Logging Level
+Default=Standard
+DisableIfBlank=true
+Description=Different logging levels. Select 'Verbose' for debug level log messages. Default: Standard.
+
+[PreJobTaskMode]
+Type=enum
+Values=Conservative;Ignore;Normal
+Category=Advanced configuration for spot management
+CategoryOrder=5
+Index=1
+Label=Pre Job Task Mode
+Default=Conservative
+Description=<html><head/><body><p>How the Spot Event Plugin handles Pre Job Tasks. <b>Conservative</b> will only start 1 resource for the pre job task and ignore any other tasks for that job until the pre job task is completed. <b>Ignore</b> will not take the pre job task into account when calculating target capacity. <b>Normal</b> will treat the pre job task like a regular job queued task. Default: Conservative</p></body></html>
+
+[RemoveDeletedWorkers]
+Type=boolean
+Category=Advanced configuration for spot management
+CategoryOrder=5
+Index=2
+Label=Remove deleted workers
+Default=False
+Description=If enabled, remove deleted workers from the workers panel on the next house cleaning cycle. Warning: Each worker's reports will also be deleted, which may be undesired for future debugging a render job issue. Default: False.
+
+[CoolDownInSeconds]
+Type=integer
+Category=Advanced configuration for spot management
+CategoryOrder=5
+Index=5
+Label=Minimum cool down time to apply prior to deleting the resource (in seconds)
+Default=300
+Minimum=1
+Maximum=3601
+Description=Scale down less aggressively by applying a longer cool down time before actually deleting the resource. Default: 300.
+
+[ConcurrentTasks]
+Type=boolean
+Category=Advanced configuration for spot management
+CategoryOrder=5
+Index=6
+Label=Enable concurrent tasks
+Default=True
+Description=Enable concurrent tasks. Default: True.
+
+[APIEndpoint]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=0
+Label=API endpoint
+Default=https://console-api.escape-technology.com
+Description=<html><head/><body><p>The Sherpa API endpoint. Default: https://console-api.escape-technology.com. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
+
+[DataFile]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=1
+Label=Path to data file
+Default=/etc/sherpa/data.json
+Description=<html><head/><body><p>The full path to the data file containing Sherpa data. Default: Sherpa_ID. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
+
+[SherpaIdentifierKey]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=2
+Label=Sherpa identifier key
+Default=Sherpa_ID
+Description=<html><head/><body><p>The Sherpa identifier key for key/value pair. Default: Sherpa_ID. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
+
+[SherpaDeleteTimestampKey]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=3
+Label=Sherpa delete timestamp key
+Default=Sherpa_DeleteTimestamp
+Description=<html><head/><body><p>The Sherpa delete timestamp key for key/value pair. Default: Sherpa_DeleteTimestamp. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
+
+[SherpaDeletedKey]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=4
+Label=Sherpa deleted key
+Default=Sherpa_Deleted
+Description=<html><head/><body><p>The Sherpa deleted key for key/value pair. Default: Sherpa_Deleted. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
