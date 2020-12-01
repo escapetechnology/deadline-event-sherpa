@@ -592,8 +592,8 @@ class SherpaEventListener(DeadlineEventListener):
                     deleted = workerSettings.GetSlaveExtraInfoKeyValue(deletedKey)
 
                     if deleted == "True":
-                        if self.verLog:
-                            self.LogInfo("Deleted worker: {}".format(worker))
+                        if self.stdLog:
+                            self.LogInfo("Deleted worker: {0}".format(worker))
 
                         RepositoryUtils.DeleteSlave(worker)
 
