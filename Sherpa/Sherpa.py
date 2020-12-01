@@ -157,7 +157,8 @@ class SherpaEventListener(DeadlineEventListener):
 
         for slaveName in slaveNames:
             slaveSettings = RepositoryUtils.GetSlaveSettings(slaveName, True)
-            resourceID = slaveSettings.GetSlaveExtraInfoKeyValue(self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID"))
+            identifierKey = self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID")
+            resourceID = slaveSettings.GetSlaveExtraInfoKeyValue(identifierKey)
 
             if self.verLog:
                 self.LogInfo("Worker's Sherpa ID: {0}".format(resourceID))
@@ -166,11 +167,15 @@ class SherpaEventListener(DeadlineEventListener):
                 if self.stdLog:
                     self.LogInfo("{0} resource: ID {1}.".format(operation.capitalize(), resourceID))
 
+            if resourceID:
                 if ResourceHasOperation(
                     self.sherpaClient,
                     resourceID,
                     operation
                 ):
+                    if self.stdLog:
+                        self.LogInfo("{0} resource: ID {1}.".format(operation.capitalize(), resourceID))
+
                     if operation == OPERATION_START:
                         StartResources(
                             self.sherpaClient,
@@ -181,6 +186,9 @@ class SherpaEventListener(DeadlineEventListener):
                             self.sherpaClient,
                             [resourceID]
                         )
+                else:
+                    if self.verLog:
+                        self.LogInfo("Resource ({0}) does not have operation ({1}).".format(resourceID, operation))
             else:
                 if self.stdLog:
                     self.LogInfo("Resource ID ({0}) not found.".format(resourceID))
