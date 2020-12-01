@@ -49,6 +49,11 @@ class SherpaEventListener(DeadlineEventListener):
         self.verLog = False
         self.debugLog = False
         self.OnSlaveStartedCallback += self.OnSlaveStarted
+        self.OnSlaveStartingJobCallback += self.OnSlaveStartingJob
+        self.OnSlaveRenderingCallback += self.OnSlaveRendering
+        self.OnSlaveIdleCallback += self.OnSlaveIdle
+        self.OnSlaveStoppedCallback += self.OnSlaveStopped
+        self.OnSlaveStalledCallback += self.OnSlaveStalled
         self.OnIdleShutdownCallback += self.OnIdleShutdown
         self.OnMachineStartupCallback += self.OnMachineStartup
         self.OnHouseCleaningCallback += self.OnHouseCleaning
@@ -59,21 +64,39 @@ class SherpaEventListener(DeadlineEventListener):
 
     def Cleanup(self):
         del self.OnSlaveStartedCallback
+        del self.OnSlaveStartingJobCallback
+        del self.OnSlaveRenderingCallback
+        del self.OnSlaveIdleCallback
+        del self.OnSlaveStoppedCallback
+        del self.OnSlaveStalledCallback
         del self.OnIdleShutdownCallback
         del self.OnMachineStartupCallback
         del self.OnHouseCleaningCallback
 
     def OnSlaveStarted(self, slaveName):
-        self.GetLogLevel()
+        self.register(slaveName)
 
-        if self.stdLog:
-            self.LogInfo("Sherpa event plugin - OnSlaveStarted")
+    def OnSlaveStartingJob(self, slaveName):
+        self.register(slaveName)
 
+    def OnSlaveRendering(self, slaveName):
+        self.register(slaveName)
+
+    def OnSlaveIdle(self, slaveName):
+        self.register(slaveName)
+
+    def OnSlaveStopped(self, slaveName):
+        self.register(slaveName)
+
+    def OnSlaveStalled(self, slaveName):
+        self.register(slaveName)
+
+    def register(self, slaveName):
         dataFile = self.GetConfigEntryWithDefault("DataFile", "")
 
         try:
             with open(dataFile) as json_file:
-                if self.stdLog:
+                if self.verLog:
                     self.LogInfo("Reading Sherpa data file: {0}".format(dataFile))
 
                 data = json.load(json_file)
@@ -85,7 +108,7 @@ class SherpaEventListener(DeadlineEventListener):
                 if not value or value == None:
                     id = data['id']
 
-                    if self.stdLog:
+                    if self.verLog:
                         self.LogInfo("Saving Sherpa ID as extra info key/value pair: {0} (key) + {1} (value)".format(key, id))
 
                     dict = slaveSettings.SlaveExtraInfoDictionary
@@ -98,7 +121,7 @@ class SherpaEventListener(DeadlineEventListener):
                 if self.verLog:
                     self.LogInfo("id: {0}, @type: {1}".format(data['id'], data['@type']))
         except IOError:
-            if self.stdLog:
+            if self.verLog:
                 self.LogWarning("Sherpa data file ({0}) could not be read!".format(dataFile))
 
     def OnMachineStartup(self, groupName, slaveNames, MachineStartupOptions):
