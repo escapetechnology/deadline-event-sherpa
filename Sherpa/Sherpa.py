@@ -602,6 +602,9 @@ class SherpaEventListener(DeadlineEventListener):
         value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
         if not value or value == None:
+            if self.verLog:
+                self.LogInfo("Saving delete timestamp as extra info key/value pair: {0} (key) + {1} (value)".format(key, value))
+
             dict = workerSettings.SlaveExtraInfoDictionary
 
             dict.Add(key, str(timestamp))
@@ -614,6 +617,9 @@ class SherpaEventListener(DeadlineEventListener):
         value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
         if value != None:
+            if self.verLog:
+                self.LogInfo("Removing delete timestamp extra info key/value pair: {0} (key) + {1} (value)".format(key, value))
+
             dict = workerSettings.SlaveExtraInfoDictionary
 
             dict.Remove(key)
@@ -626,6 +632,9 @@ class SherpaEventListener(DeadlineEventListener):
         value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
         if not value or value == None:
+            if self.verLog:
+                self.LogInfo("Saving deleted as extra info key/value pair: {0} (key) + {1} (value)".format(key, value))
+
             dict = workerSettings.SlaveExtraInfoDictionary
 
             dict.Add(key, "True")
