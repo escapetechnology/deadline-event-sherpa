@@ -602,12 +602,14 @@ class SherpaEventListener(DeadlineEventListener):
         value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
         if not value or value == None:
+            value = str(timestamp)
+
             if self.verLog:
                 self.LogInfo("Saving delete timestamp as extra info key/value pair: {0} (key) + {1} (value)".format(key, value))
 
             dict = workerSettings.SlaveExtraInfoDictionary
 
-            dict.Add(key, str(timestamp))
+            dict.Add(key, value)
 
             workerSettings.SlaveExtraInfoDictionary = dict
             RepositoryUtils.SaveSlaveSettings(workerSettings)
