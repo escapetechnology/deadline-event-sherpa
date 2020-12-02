@@ -595,7 +595,20 @@ class SherpaEventListener(DeadlineEventListener):
                         if self.stdLog:
                             self.LogInfo("[{0}] Deleted worker".format(workerName))
 
-                        RepositoryUtils.DeleteSlave(worker)
+                        # we had occasions where the delete is called and not actually done, so we
+                        # added an additional (nasty) "check" to make sure the worker gets deleted from Deadline
+                        count = 1
+
+                        while resourceID:
+                            if self.verLog:
+                                self.LogInfo("[{0}] Deleting worker... (x{1})".format(workerName, count))
+
+                            RepositoryUtils.DeleteSlave(workerName)
+
+                            workerSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
+                            resourceID = workerSettings.GetSlaveExtraInfoKeyValue(identifierKey)
+
+                            count += 1
 
     def EarmarkForDeletion(self, workerSettings, timestamp):
         key = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
