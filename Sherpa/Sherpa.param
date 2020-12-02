@@ -173,15 +173,6 @@ Label=API endpoint
 Default=https://console-api.escape-technology.com
 Description=<html><head/><body><p>The Sherpa API endpoint. Default: https://console-api.escape-technology.com. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
 
-[DataFile]
-Type=string
-Category=Danger zone
-CategoryOrder=999
-Index=1
-Label=Path to data file
-Default=/etc/sherpa/data.json
-Description=<html><head/><body><p>The full path to the data file containing Sherpa data. Default: Sherpa_ID. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
-
 [SherpaIdentifierKey]
 Type=string
 Category=Danger zone
