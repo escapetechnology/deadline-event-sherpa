@@ -161,7 +161,7 @@ class SherpaEventListener(DeadlineEventListener):
             resourceID = slaveSettings.GetSlaveExtraInfoKeyValue(identifierKey)
 
             if self.verLog:
-                self.LogInfo("Worker's Sherpa ID: {0}".format(resourceID))
+                self.LogInfo("[{0}] Worker's resource ID: {1}".format(workerName, resourceID))
 
             if resourceID:
                 if self.stdLog:
@@ -174,7 +174,7 @@ class SherpaEventListener(DeadlineEventListener):
                     operation
                 ):
                     if self.stdLog:
-                        self.LogInfo("{0} resource: ID {1}.".format(operation.capitalize(), resourceID))
+                        self.LogInfo("[{0}] {1} resource ({2}).".format(workerName, operation.capitalize(), resourceID))
 
                     if operation == OPERATION_START:
                         StartResources(
@@ -188,10 +188,10 @@ class SherpaEventListener(DeadlineEventListener):
                         )
                 else:
                     if self.verLog:
-                        self.LogInfo("Resource ({0}) does not have operation ({1}).".format(resourceID, operation))
+                        self.LogInfo("[{0}] Resource ({1}) does not have operation ({2}).".format(workerName, resourceID, operation))
             else:
                 if self.stdLog:
-                    self.LogInfo("Resource ID ({0}) not found.".format(resourceID))
+                    self.LogInfo("[{0}] Resource ID not found.".format(workerName))
 
     def OnHouseCleaning(self):
         self.GetLogLevel()
@@ -319,14 +319,14 @@ class SherpaEventListener(DeadlineEventListener):
             workerNames = RepositoryUtils.GetSlaveNames(True)
 
             for workerName in workerNames:
-                if self.debugLog:
-                    self.LogInfo("{0} = a worker".format(workerName))
+                if self.verLog:
+                    self.LogInfo("[{0}] = a worker".format(workerName))
 
                 workerInfo = RepositoryUtils.GetSlaveInfo(workerName, True)
                 workerState = workerInfo.SlaveState
 
-                if self.debugLog:
-                    self.LogInfo("{0} = worker state".format(workerState))
+                if self.verLog:
+                    self.LogInfo("[{0}] {1} = worker state".format(workerName, workerState))
 
                 workerSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
 
@@ -334,7 +334,7 @@ class SherpaEventListener(DeadlineEventListener):
                 resourceID = workerSettings.GetSlaveExtraInfoKeyValue(identifierKey)
 
                 if self.verLog:
-                    self.LogInfo("Worker's Sherpa ID: {0}".format(resourceID))
+                    self.LogInfo("[{0}] Worker's resource ID: {1}".format(workerName, resourceID))
 
                 if resourceID:
                     deleteTimestampKey = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
@@ -356,7 +356,7 @@ class SherpaEventListener(DeadlineEventListener):
                             # is it time to delete the resource?
                             if now > (int(timestamp) + coolDownInSeconds):
                                 if self.stdLog:
-                                    self.LogInfo("Worker has been {0} for too long (> {1}): {2} > {3} + {1}, request deletion".format(workerState, coolDownInSeconds, now, timestamp))
+                                    self.LogInfo("[{0}] Worker has been {1} for too long (> {2}): {3} > {4} + {2}, request deletion".format(workerName, workerState, coolDownInSeconds, now, timestamp))
 
                                 self.MarkAsDeleted(workerSettings)
 
@@ -378,7 +378,7 @@ class SherpaEventListener(DeadlineEventListener):
                                 timestamp = int(time.time())
 
                                 if self.stdLog:
-                                    self.LogInfo("Worker is {0}: saving Sherpa delete timestamp as extra info key/value pair: {1} (key) {2} (value)".format(workerState, deleteTimestampKey, timestamp))
+                                    self.LogInfo("[{0}] Worker is {1}: saving Sherpa delete timestamp as extra info key/value pair: {2} (key) {3} (value)".format(workerName, workerState, deleteTimestampKey, timestamp))
 
                                 self.EarmarkForDeletion(workerSettings, timestamp)
 
@@ -547,13 +547,13 @@ class SherpaEventListener(DeadlineEventListener):
 
         for workerName in workerNames:
             if self.verLog:
-                self.LogInfo("{0} = a worker".format(workerName))
+                self.LogInfo("[{0}] = a worker".format(workerName))
 
             workerInfo = RepositoryUtils.GetSlaveInfo(workerName, True)
             workerState = workerInfo.SlaveState
 
             if self.verLog:
-                self.LogInfo("{0} = worker state".format(workerState))
+                self.LogInfo("[{0}] {0} = worker state".format(workerName, workerState))
 
             if workerState != "Idle" and workerState != "Stalled" and workerState != "Offline":
                 deleteTimestampKey = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
@@ -562,7 +562,7 @@ class SherpaEventListener(DeadlineEventListener):
 
                 if existingTimestamp:
                     if self.stdLog:
-                        self.LogInfo("Worker is {0}: removing Sherpa delete timestamp as extra info key/value pair: {1} (key)".format(workerState, deleteTimestampKey))
+                        self.LogInfo("[{0}] Worker is {1}: removing Sherpa delete timestamp as extra info key/value pair: {2} (key)".format(workerName, workerState, deleteTimestampKey))
 
                     self.UnearmarkForDeletion(workerSettings)
 
@@ -578,14 +578,14 @@ class SherpaEventListener(DeadlineEventListener):
 
             workerNames = RepositoryUtils.GetSlaveNames(True)
 
-            for worker in workerNames:
-                workerSettings = RepositoryUtils.GetSlaveSettings(worker, True)
+            for workerName in workerNames:
+                workerSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
 
                 identifierKey = self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID")
                 resourceID = workerSettings.GetSlaveExtraInfoKeyValue(identifierKey)
 
                 if self.verLog:
-                    self.LogInfo("Worker's Sherpa ID: {0}".format(resourceID))
+                    self.LogInfo("[{0}] Worker's resource ID: {0}".format(workerName, resourceID))
 
                 if resourceID:
                     deletedKey = self.GetConfigEntryWithDefault("SherpaDeletedKey", "Sherpa_Deleted")
@@ -593,7 +593,7 @@ class SherpaEventListener(DeadlineEventListener):
 
                     if deleted == "True":
                         if self.stdLog:
-                            self.LogInfo("Deleted worker: {0}".format(worker))
+                            self.LogInfo("[{0}] Deleted worker".format(workerName))
 
                         RepositoryUtils.DeleteSlave(worker)
 
