@@ -371,7 +371,7 @@ class SherpaEventListener(DeadlineEventListener):
                             )
 
                             if self.verLog:
-                                self.LogInfo("Sherpa resource's tenure: {0}".format(tenure))
+                                self.LogInfo("[{0}] Sherpa resource's tenure: {1}".format(workerName, tenure))
 
                             if tenure == TENURE_SPOT:
                                 # mark worker for cooldown (using timestamp)
