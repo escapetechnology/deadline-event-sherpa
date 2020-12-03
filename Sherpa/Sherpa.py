@@ -560,7 +560,7 @@ class SherpaEventListener(DeadlineEventListener):
                             RepositoryUtils.DeleteSlave(workerName)
                         else:
                             if self.verLog:
-                                self.LogInfo("[{0}] Postpone deletion of worker as resource is {0}".format(workerName, marking))
+                                self.LogInfo("[{0}] Postpone deletion of worker as resource is {1}".format(workerName, marking))
 
     def EarmarkForDeletion(self, workerSettings, timestamp):
         key = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
