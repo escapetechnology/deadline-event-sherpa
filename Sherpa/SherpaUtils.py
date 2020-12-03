@@ -108,6 +108,18 @@ def GetResources(apiClient, projectID):
 
     return []
 
+def GetResourceMarking(apiClient, resourceID):
+    api_instance = sherpa.NodeApi(apiClient)
+
+    try:
+        api_response = api_instance.get_node_item(id=resourceID)
+
+        return api_response.marking
+    except ApiException as e:
+        print("Exception when calling NodeApi->get_node_item: %s\n" % e)
+
+    return None
+
 def StartResources(apiClient, resourceIDs):
     if resourceIDs == None or len(resourceIDs) == 0:
         return

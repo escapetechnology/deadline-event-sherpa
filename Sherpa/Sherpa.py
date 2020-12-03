@@ -16,7 +16,7 @@ eventPath = RepositoryUtils.GetEventPluginDirectory("Sherpa")
 if eventPath not in sys.path:
     sys.path.append(eventPath)
 
-from SherpaUtils import Authenticate, GetResources, ResourceHasOperation, GetResourceTenure, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
+from SherpaUtils import Authenticate, GetResources, ResourceHasOperation, GetResourceTenure, GetResourceMarking, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
 
 TENURE_ONDEMAND = "on-demand"
 TENURE_SPOT = "spot"
@@ -546,20 +546,21 @@ class SherpaEventListener(DeadlineEventListener):
                         if self.stdLog:
                             self.LogInfo("[{0}] Deleted worker".format(workerName))
 
-                        # we had occasions where the delete is called and not actually done, so we
-                        # added an additional (nasty) "check" to make sure the worker gets deleted from Deadline
-                        count = 1
+                        # if the resource is still around, it will check in again after deletion
+                        # let's perform a quick check if the resource has already been destroyed
+                        marking = GetResourceMarking(
+                            self.sherpaClient,
+                            resourceID
+                        )
 
-                        while resourceID:
-                            if self.verLog:
-                                self.LogInfo("[{0}] Deleting worker... (x{1})".format(workerName, count))
+                        if marking == "destroyed":
+                            if self.stdLog:
+                                self.LogInfo("[{0}] Deleting worker as resource is {1}".format(workerName, marking))
 
                             RepositoryUtils.DeleteSlave(workerName)
-
-                            workerSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
-                            resourceID = workerSettings.GetSlaveExtraInfoKeyValue(identifierKey)
-
-                            count += 1
+                        else:
+                            if self.verLog:
+                                self.LogInfo("[{0}] Postpone deletion of worker as resource is {0}".format(workerName, marking))
 
     def EarmarkForDeletion(self, workerSettings, timestamp):
         key = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
