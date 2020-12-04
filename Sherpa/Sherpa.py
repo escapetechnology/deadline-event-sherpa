@@ -8,6 +8,7 @@ from Deadline.Scripting import ClientUtils, RepositoryUtils
 from System.Collections.Generic import Dictionary
 import json
 from math import ceil
+import platform
 import sys
 import time
 
@@ -48,6 +49,7 @@ class SherpaEventListener(DeadlineEventListener):
         self.stdLog = False
         self.verLog = False
         self.debugLog = False
+        self.OnSlaveStartedCallback += self.OnSlaveStarted
         self.OnMachineStartupCallback += self.OnMachineStartup
         self.OnIdleShutdownCallback += self.OnIdleShutdown
         self.OnHouseCleaningCallback += self.OnHouseCleaning
@@ -57,9 +59,55 @@ class SherpaEventListener(DeadlineEventListener):
         self.sherpaClient = None
 
     def Cleanup(self):
+        del self.OnSlaveStartedCallback
         del self.OnMachineStartupCallback
         del self.OnIdleShutdownCallback
         del self.OnHouseCleaningCallback
+
+    def OnSlaveStarted(self, slaveName):
+        self.register(slaveName)
+
+    def register(self, slaveName):
+        dataFile = None
+
+        if platform.system() == "Linux":
+            dataFile = self.GetConfigEntryWithDefault("DataFileLinux", "")
+
+        if platform.system() == "Windows":
+            dataFile = self.GetConfigEntryWithDefault("DataFileWindows", "")
+
+        if not dataFile or dataFile == None:
+            raise Exception("Please enter the desired data file for this OS.")
+
+        try:
+            with open(dataFile) as json_file:
+                if self.verLog:
+                    self.LogInfo("Reading Sherpa data file: {0}".format(dataFile))
+
+                data = json.load(json_file)
+
+                slaveSettings = RepositoryUtils.GetSlaveSettings(slaveName, True)
+                key = self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID")
+                value = slaveSettings.GetSlaveExtraInfoKeyValue(key)
+
+                if not value or value == None:
+                    id = data['id']
+
+                    if self.verLog:
+                        self.LogInfo("Saving Sherpa ID as extra info key/value pair: {0} (key) + {1} (value)".format(key, id))
+
+                    dict = slaveSettings.SlaveExtraInfoDictionary
+
+                    dict.Add(key, id)
+
+                    slaveSettings.SlaveExtraInfoDictionary = dict
+                    RepositoryUtils.SaveSlaveSettings(slaveSettings)
+
+                if self.verLog:
+                    self.LogInfo("id: {0}, @type: {1}".format(data['id'], data['@type']))
+        except IOError:
+            if self.verLog:
+                self.LogWarning("Sherpa data file ({0}) could not be read!".format(dataFile))
 
     def OnMachineStartup(self, groupName, slaveNames, MachineStartupOptions):
         self.GetLogLevel()

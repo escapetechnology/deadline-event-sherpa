@@ -173,11 +173,29 @@ Label=API endpoint
 Default=https://console-api.escape-technology.com
 Description=<html><head/><body><p>The Sherpa API endpoint. Default: https://console-api.escape-technology.com. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
 
-[SherpaIdentifierKey]
+[DataFileLinux]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=1
+Label=Path to data file
+Default=/etc/sherpa/data.json
+Description=<html><head/><body><p>The full Linux path to the data file containing Sherpa data. Default: /etc/sherpa/data.json. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
+
+[DataFileWindows]
 Type=string
 Category=Danger zone
 CategoryOrder=999
 Index=2
+Label=Path to data file
+Default=C:\sherpa\data.json
+Description=<html><head/><body><p>The full Windows path to the data file containing Sherpa data. Default: C:\sherpa\data.json. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
+
+[SherpaIdentifierKey]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=3
 Label=Sherpa identifier key
 Default=Sherpa_ID
 Description=<html><head/><body><p>The Sherpa identifier key for key/value pair. Default: Sherpa_ID. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
@@ -186,7 +204,7 @@ Description=<html><head/><body><p>The Sherpa identifier key for key/value pair. 
 Type=string
 Category=Danger zone
 CategoryOrder=999
-Index=3
+Index=4
 Label=Sherpa delete timestamp key
 Default=Sherpa_DeleteTimestamp
 Description=<html><head/><body><p>The Sherpa delete timestamp key for key/value pair. Default: Sherpa_DeleteTimestamp. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
@@ -195,7 +213,7 @@ Description=<html><head/><body><p>The Sherpa delete timestamp key for key/value 
 Type=string
 Category=Danger zone
 CategoryOrder=999
-Index=4
+Index=5
 Label=Sherpa deleted key
 Default=Sherpa_Deleted
 Description=<html><head/><body><p>The Sherpa deleted key for key/value pair. Default: Sherpa_Deleted. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
