@@ -70,6 +70,24 @@ def ResourceHasOperation(apiClient, resourceID, operation):
 
     return False
 
+def ResourceHasEnabledOperation(apiClient, resourceID, enabled_operation):
+    api_instance = sherpa.NodeApi(apiClient)
+
+    needle = enabled_operation
+
+    try:
+        api_response = api_instance.get_node_item(resourceID)
+
+        for enabled_operation in api_response.enabled_operations:
+            if enabled_operation == needle:
+                return True
+
+                break
+    except ApiException as e:
+        print("Exception when calling NodeApi->get_node_item: %s\n" % e)
+
+    return False
+
 def GetResourceTenure(apiClient, resourceID):
     api_instance = sherpa.NodeApi(apiClient)
 

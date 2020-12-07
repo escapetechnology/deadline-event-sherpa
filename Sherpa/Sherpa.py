@@ -17,7 +17,7 @@ eventPath = RepositoryUtils.GetEventPluginDirectory("Sherpa")
 if eventPath not in sys.path:
     sys.path.append(eventPath)
 
-from SherpaUtils import Authenticate, GetResources, ResourceHasOperation, GetResourceTenure, GetResourceMarking, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
+from SherpaUtils import Authenticate, GetResources, ResourceHasOperation, ResourceHasEnabledOperation, GetResourceTenure, GetResourceMarking, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
 
 TENURE_ONDEMAND = "on-demand"
 TENURE_SPOT = "spot"
@@ -175,38 +175,26 @@ class SherpaEventListener(DeadlineEventListener):
                     if self.stdLog:
                         self.LogInfo("[{0}] {1} resource ({2})".format(workerName, operation.capitalize(), resourceID))
 
-                    if operation == OPERATION_START:
-                        marking = GetResourceMarking(
-                            self.sherpaClient,
-                            resourceID
-                        )
-
-                        if marking == "started":
-                            if self.verLog:
-                                self.LogInfo("[{0}] {1} resource ({2}) - resource marking is 'started' already".format(workerName, operation.capitalize(), resourceID))
-                        else:
+                    if ResourceHasEnabledOperation(
+                        self.sherpaClient,
+                        resourceID,
+                        operation
+                    ):
+                        if operation == OPERATION_START:
                             StartResources(
                                 self.sherpaClient,
                                 [resourceID]
                             )
-
-                            count += 1
-                    else:
-                        marking = GetResourceMarking(
-                            self.sherpaClient,
-                            resourceID
-                        )
-
-                        if marking == "stopped":
-                            if self.verLog:
-                                self.LogInfo("[{0}] {1} resource ({2}) - resource marking is 'stopped' already".format(workerName, operation.capitalize(), resourceID))
                         else:
                             StopResources(
                                 self.sherpaClient,
                                 [resourceID]
                             )
 
-                            count += 1
+                        count += 1
+                    else:
+                        if self.verLog:
+                            self.LogInfo("[{0}] Resource ({1}) does not have enabled_operation ({2})".format(workerName, resourceID, operation))
                 else:
                     if self.verLog:
                         self.LogInfo("[{0}] Resource ({1}) does not have operation ({2})".format(workerName, resourceID, operation))
