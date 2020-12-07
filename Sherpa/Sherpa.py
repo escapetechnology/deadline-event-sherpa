@@ -65,9 +65,8 @@ class SherpaEventListener(DeadlineEventListener):
         del self.OnHouseCleaningCallback
 
     def OnSlaveStarted(self, slaveName):
-        self.register(slaveName)
+        self.GetLogLevel()
 
-    def register(self, slaveName):
         dataFile = None
 
         if platform.system() == "Linux":
@@ -77,7 +76,10 @@ class SherpaEventListener(DeadlineEventListener):
             dataFile = self.GetConfigEntryWithDefault("DataFileWindows", "")
 
         if not dataFile or dataFile == None:
-            raise Exception("Please enter the desired data file for this OS.")
+            self.LogWarning("Please enter the desired data file for this OS")
+        else:
+            if self.verLog:
+                self.LogInfo("Using Sherpa data file: {0}".format(dataFile))
 
         try:
             with open(dataFile) as json_file:
@@ -107,7 +109,7 @@ class SherpaEventListener(DeadlineEventListener):
                     self.LogInfo("id: {0}, @type: {1}".format(data['id'], data['@type']))
         except IOError:
             if self.verLog:
-                self.LogWarning("Sherpa data file ({0}) could not be read!".format(dataFile))
+                self.LogWarning("Sherpa data file ({0}) could not be read".format(dataFile))
 
     def OnMachineStartup(self, groupName, slaveNames, MachineStartupOptions):
         self.GetLogLevel()
@@ -171,7 +173,7 @@ class SherpaEventListener(DeadlineEventListener):
                     operation
                 ):
                     if self.stdLog:
-                        self.LogInfo("[{0}] {1} resource ({2}).".format(workerName, operation.capitalize(), resourceID))
+                        self.LogInfo("[{0}] {1} resource ({2})".format(workerName, operation.capitalize(), resourceID))
 
                     if operation == OPERATION_START:
                         StartResources(
@@ -187,10 +189,10 @@ class SherpaEventListener(DeadlineEventListener):
                     count += 1
                 else:
                     if self.verLog:
-                        self.LogInfo("[{0}] Resource ({1}) does not have operation ({2}).".format(workerName, resourceID, operation))
+                        self.LogInfo("[{0}] Resource ({1}) does not have operation ({2})".format(workerName, resourceID, operation))
             else:
                 if self.stdLog:
-                    self.LogInfo("[{0}] Resource ID not found.".format(workerName))
+                    self.LogInfo("[{0}] Resource ID not found".format(workerName))
 
     def OnHouseCleaning(self):
         self.GetLogLevel()
@@ -220,8 +222,8 @@ class SherpaEventListener(DeadlineEventListener):
                     self.LogInfo("\t{0}: {1}".format(limit, self.limit_groups[limit].availableStubs))
 
             if not PLUGIN_LIMITS_SUPPORTED:
-                self.LogWarning("Unable to use Plugin limits for calculating spot targets.")
-                self.LogWarning("Please update the Deadline client to match the Deadline Repository version.")
+                self.LogWarning("Unable to use Plugin limits for calculating spot targets")
+                self.LogWarning("Please update the Deadline client to match the Deadline Repository version")
 
         self.DetermineTargetCapacities()
 
@@ -248,7 +250,7 @@ class SherpaEventListener(DeadlineEventListener):
         projectID = self.GetConfigEntryWithDefault("ProjectID", "")
 
         if not projectID or projectID == None:
-            raise Exception("Please enter the desired Sherpa project ID.")
+            raise Exception("Please enter the desired Sherpa project ID")
 
         currentNumberOfResources = len(
             GetResources(
@@ -275,13 +277,13 @@ class SherpaEventListener(DeadlineEventListener):
             volumeSize = self.GetIntegerConfigEntryWithDefault("VolumeSize", 32)
 
             if not projectID or projectID == None:
-                raise Exception("Please enter the desired Sherpa project ID.")
+                raise Exception("Please enter the desired Sherpa project ID")
 
             if not prefix or prefix == None:
-                raise Exception("Please enter the desired resource name.")
+                raise Exception("Please enter the desired resource name")
 
             if not sizeID or sizeID == None:
-                raise Exception("Please enter the desired Sherpa size ID.")
+                raise Exception("Please enter the desired Sherpa size ID")
 
             tenure = GetSizeTenure(
                 self.sherpaClient,
@@ -292,13 +294,13 @@ class SherpaEventListener(DeadlineEventListener):
                 self.LogInfo("Sherpa size's tenure: {0}".format(tenure))
 
             if tenure != TENURE_SPOT:
-                raise Exception("Please provide a size that has a spot tenure.")
+                raise Exception("Please provide a size that has a spot tenure")
 
             if not imageID or imageID == None:
-                raise Exception("Please enter the desired Sherpa image ID.")
+                raise Exception("Please enter the desired Sherpa image ID")
 
             if not volumeSize or volumeSize == None:
-                raise Exception("Please enter the desired resource volume size.")
+                raise Exception("Please enter the desired resource volume size")
 
             CreateResources(
                 self.sherpaClient,
@@ -382,7 +384,7 @@ class SherpaEventListener(DeadlineEventListener):
                                 self.EarmarkForDeletion(workerSettings, timestamp)
 
     def SetupLimitSettings(self):
-        """Creates a dictionary for all Limits containing settings information."""
+        """Creates a dictionary for all Limits containing settings information"""
 
         limitGroups = RepositoryUtils.GetLimitGroups(True)
 
@@ -404,7 +406,7 @@ class SherpaEventListener(DeadlineEventListener):
             self.stdLog = self.verLog = self.debugLog = True
 
     def DetermineTargetCapacities(self):
-        """For each active job, determine what the target number of resources should be."""
+        """For each active job, determine what the target number of resources should be"""
 
         self.job_targets = {}
 
@@ -433,7 +435,7 @@ class SherpaEventListener(DeadlineEventListener):
                 self.limit_groups[limit].AdjustAvailableStubsForSlave(concurrentTasks, num_workers, job.JobQueuedTasks)
 
     def JobsToCheck(self):
-        """Returns the active jobs to evaluate."""
+        """Returns the active jobs to evaluate"""
 
         jobs = RepositoryUtils.GetJobsInState("Active")
 
@@ -450,7 +452,7 @@ class SherpaEventListener(DeadlineEventListener):
                 yield job
 
     def GetConcurrentTasks(self, job):
-        """Returns the number of concurrent tasks for a job. Returns 1 if the plugin disables concurrent tasks."""
+        """Returns the number of concurrent tasks for a job. Returns 1 if the plugin disables concurrent tasks"""
 
         if self.plugins[job.JobPlugin].concurrent_tasks:
             return job.JobConcurrentTasks
@@ -458,7 +460,7 @@ class SherpaEventListener(DeadlineEventListener):
         return 1
 
     def LimitedLimitsForJob(self, job):
-        """Returns the distinct Limits for a job and its plugin that are not unlimited."""
+        """Returns the distinct Limits for a job and its plugin that are not unlimited"""
 
         limits = {limit for limit in job.JobLimitGroups}
         limits.union({limit for limit in self.plugins[job.JobPlugin].limits})
@@ -468,7 +470,7 @@ class SherpaEventListener(DeadlineEventListener):
                 yield limitName
 
     def AdjustAvailableStubsForSlave(self, concurrentTasks, num_workers, queuedTasks):
-        """Reduces the available stubs for the Limit. Functionality changes depending on the type of the Limit."""
+        """Reduces the available stubs for the Limit. Functionality changes depending on the type of the Limit"""
 
         if self._limitGroup.LimitStubLevel == StubLevel.Task:
             self.availableStubs -= min(concurrentTasks * num_workers, queuedTasks, self.availableStubs)
@@ -476,7 +478,7 @@ class SherpaEventListener(DeadlineEventListener):
             self.availableStubs -= num_workers
 
     def DetermineWorkerCountForJob(self, job, concurrentTasks):
-        """Given a job and the number of concurrentTasks, determine the number of workers that could work on it."""
+        """Given a job and the number of concurrentTasks, determine the number of workers that could work on it"""
 
         queued_tasks = self.GetQueuedTasksForPreJobTaskMode(job)
 
@@ -508,7 +510,7 @@ class SherpaEventListener(DeadlineEventListener):
         return num_workers
 
     def GetQueuedTasksForPreJobTaskMode(self, job):
-        """Given a job, determine number of queued tasks taking into account the pre-job task behaviour."""
+        """Given a job, determine number of queued tasks taking into account the pre-job task behaviour"""
 
         queued_tasks = job.JobQueuedTasks
 
@@ -663,19 +665,19 @@ class SherpaEventListener(DeadlineEventListener):
         endpoint = self.GetConfigEntryWithDefault("APIEndpoint", "")
 
         if len(key) <= 0:
-            raise Exception("Please enter your Sherpa API key.")
+            raise Exception("Please enter your Sherpa API key")
 
         if len(secret) <= 0:
-            raise Exception("Please enter your Sherpa API secret.")
+            raise Exception("Please enter your Sherpa API secret")
 
         if len(endpoint) <= 0:
-            raise Exception("Please enter the Sherpa API endpoint.")
+            raise Exception("Please enter the Sherpa API endpoint")
 
         self.sherpaClient = Authenticate(endpoint, key, secret)
 
 class key_arg_defaultdict(defaultdict):
-    """A subclass of defaultdict that passes in arguments for missing keys.
-    The default factory does not."""
+    """A subclass of defaultdict that passes in arguments for missing keys,
+    the default factory does not"""
 
     def __missing__(self, key):
         if self.default_factory is None:
@@ -686,7 +688,7 @@ class key_arg_defaultdict(defaultdict):
         return ret
 
 class plugin_settings(object):
-    """Stores the concurrent task enabled/disabled information for a plugin."""
+    """Stores the concurrent task enabled/disabled information for a plugin"""
 
     def __init__(self, plugin):
         self.name = plugin
