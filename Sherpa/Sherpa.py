@@ -17,13 +17,7 @@ eventPath = RepositoryUtils.GetEventPluginDirectory("Sherpa")
 if eventPath not in sys.path:
     sys.path.append(eventPath)
 
-from SherpaUtils import Authenticate, GetResources, ResourceHasOperation, ResourceHasEnabledOperation, GetResourceTenure, GetResourceMarking, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
-
-TENURE_ONDEMAND = "on-demand"
-TENURE_SPOT = "spot"
-
-OPERATION_START = "start"
-OPERATION_STOP = "stop"
+from SherpaUtils import TENURE_ONDEMAND, TENURE_SPOT, OPERATION_START, OPERATION_STOP, Authenticate, GetResources, ResourceHasOperation, ResourceHasEnabledOperation, GetResourceTenure, GetResourceMarking, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
 
 PLUGIN_LIMITS_SUPPORTED = 'GetPluginLimitGroups' in dir(RepositoryUtils)
 

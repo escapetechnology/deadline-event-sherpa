@@ -27,6 +27,12 @@ from sherpa.rest import ApiException
 # the underlying idea is to have the communication with the Sherpa API (via the SDK) separated out from any Deadline specific logic
 #
 
+TENURE_ONDEMAND = "on-demand"
+TENURE_SPOT = "spot"
+
+OPERATION_START = "start"
+OPERATION_STOP = "stop"
+
 def Authenticate(endpoint, key, secret):
     configuration = sherpa.Configuration(
         host = endpoint
@@ -148,7 +154,7 @@ def StartResources(apiClient, resourceIDs):
         resourceID = resourceIDs[i]
 
         node = sherpa.Node()
-        node.marking = "start"
+        node.marking = OPERATION_START
 
         try:
             api_instance.put_node_item(resourceID, node=node)
@@ -165,7 +171,7 @@ def StopResources(apiClient, resourceIDs):
         resourceID = resourceIDs[i]
 
         node = sherpa.Node()
-        node.marking = "stop"
+        node.marking = OPERATION_STOP
 
         try:
             api_instance.put_node_item(resourceID, node=node)
