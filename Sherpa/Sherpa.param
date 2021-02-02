@@ -70,7 +70,7 @@ CategoryOrder=4
 Index=1
 Label=New resource Sherpa size ID
 Default=
-Description=The Sherpa size ID to be used when requesting new resource(s).
+Description=<html><head/><body><p>The Sherpa size ID(s) to be used when requesting new resource(s). You can specify multiple size IDs by comma-delimiting the desired size IDs, from most-wanted to least wanted. Please be aware that <b>duplicates will get filtered out</b>.</p></body></html>
 
 [ImageID]
 Type=string
@@ -217,3 +217,12 @@ Index=5
 Label=Sherpa deleted key
 Default=Sherpa_Deleted
 Description=<html><head/><body><p>The Sherpa deleted key for key/value pair. Default: Sherpa_Deleted. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>
+
+[SherpaSpotFallbackMarkings]
+Type=string
+Category=Danger zone
+CategoryOrder=999
+Index=6
+Label=Sherpa spot fallback marking(s)
+Default=no_capacity, price_too_low
+Description=<html><head/><body><p>The Sherpa spot fallback markings that cause this plugin to fallback/forward to a next size, if multiple sizeIDs were configured. Default: no_capacity, price_too_low. <b>Do not</b> touch this unless specifically instructed to do so by Sherpa support.</p></body></html>

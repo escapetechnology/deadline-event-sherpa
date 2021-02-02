@@ -33,6 +33,9 @@ TENURE_SPOT = "spot"
 OPERATION_START = "start"
 OPERATION_STOP = "stop"
 
+MARKING_DELETING = "deleting"
+MARKING_DELETED = "deleted"
+
 def Authenticate(endpoint, key, secret):
     configuration = sherpa.Configuration(
         host = endpoint
@@ -100,13 +103,14 @@ def GetResourceTenure(apiClient, resourceID):
     try:
         api_response = api_instance.get_node_item(resourceID)
 
-        sizeID = string.replace(api_response.size, "/sizes/", "")
-
-        return GetSizeTenure(apiClient, sizeID)
+        return GetSizeTenure(apiClient, GetResourceSizeID(api_response))
     except ApiException as e:
         print("Exception when calling NodeApi->get_node_item: %s\n" % e)
 
     return None
+
+def GetResourceSizeID(resource):
+    return string.replace(resource.size, "/sizes/", "")
 
 def GetSizeTenure(apiClient, sizeID):
     api_instance = sherpa.SizeApi(apiClient)

@@ -2,7 +2,7 @@
 ## Imports
 ####################################################################
 from __future__ import division
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from Deadline.Events import DeadlineEventListener
 from Deadline.Scripting import ClientUtils, RepositoryUtils
 from System.Collections.Generic import Dictionary
@@ -17,7 +17,7 @@ eventPath = RepositoryUtils.GetEventPluginDirectory("Sherpa")
 if eventPath not in sys.path:
     sys.path.append(eventPath)
 
-from SherpaUtils import TENURE_ONDEMAND, TENURE_SPOT, OPERATION_START, OPERATION_STOP, Authenticate, GetResources, ResourceHasOperation, ResourceHasEnabledOperation, GetResourceTenure, GetResourceMarking, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
+from SherpaUtils import TENURE_ONDEMAND, TENURE_SPOT, OPERATION_START, OPERATION_STOP, MARKING_DELETING, MARKING_DELETED, Authenticate, GetResources, ResourceHasOperation, ResourceHasEnabledOperation, GetResourceTenure, GetResourceMarking, GetResourceSizeID, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
 
 PLUGIN_LIMITS_SUPPORTED = 'GetPluginLimitGroups' in dir(RepositoryUtils)
 
@@ -210,6 +210,8 @@ class SherpaEventListener(DeadlineEventListener):
 
         self.InitializeSherpaClient()
 
+        sizeID = self.WorkThroughTheSizeIDs()
+
         self.RemoveDeletedWorkers()
         self.ResetCooldownTimestamps()
         self.SetupLimitSettings()
@@ -254,15 +256,21 @@ class SherpaEventListener(DeadlineEventListener):
         if not projectID or projectID == None:
             raise Exception("Please enter the desired Sherpa project ID")
 
-        currentNumberOfResources = len(
-            GetResources(
-                self.sherpaClient,
-                projectID
-            )
+        currentNumberOfResources = 0
+
+        resources = GetResources(
+            self.sherpaClient,
+            projectID
         )
 
+        for resource in resources:
+            # we also do not want to include on_demand here, but there's nothing we can do currently other than making GetResourceTenure calls out; which is quite intensive on large scale
+            # we do not want to include deleting and deleted resources in the current number of resources, this should be handled by filtering those out in the GetResources above
+            if not (resource.marking == MARKING_DELETING or resource.marking == MARKING_DELETED):
+                currentNumberOfResources += 1
+
         if self.verLog:
-            self.LogInfo("{0} = current number of workers".format(currentNumberOfResources))
+            self.LogInfo("{0} = current number of resources".format(currentNumberOfResources))
 
         difference = requiredNumberOfWorkers - currentNumberOfResources
 
@@ -274,7 +282,6 @@ class SherpaEventListener(DeadlineEventListener):
 
             projectID = self.GetConfigEntryWithDefault("ProjectID", "")
             prefix = self.GetConfigEntryWithDefault("ResourceName", "DL-SHERPA")
-            sizeID = self.GetConfigEntryWithDefault("SizeID", "")
             imageID = self.GetConfigEntryWithDefault("ImageID", "")
             volumeSize = self.GetIntegerConfigEntryWithDefault("VolumeSize", 32)
 
@@ -319,6 +326,7 @@ class SherpaEventListener(DeadlineEventListener):
             if self.verLog:
                 self.LogInfo("{0} = excess number of worker(s)".format(excessNumberOfResources))
 
+            # clean up resources that checked in as worker(s)
             workerNames = RepositoryUtils.GetSlaveNames(True)
 
             for workerName in workerNames:
@@ -384,6 +392,10 @@ class SherpaEventListener(DeadlineEventListener):
                                     self.LogInfo("[{0}] Worker is {1}: saving Sherpa delete timestamp as extra info key/value pair: {2} (key) {3} (value)".format(workerName, workerState, deleteTimestampKey, timestamp))
 
                                 self.EarmarkForDeletion(workerSettings, timestamp)
+
+            if excessNumberOfResources < 0:
+                # clean up "fallback" resources that never checked in as worker(s)
+                self.DeleteExcessFallbacksFromResources(resources)
 
     def SetupLimitSettings(self):
         """Creates a dictionary for all Limits containing settings information"""
@@ -569,6 +581,141 @@ class SherpaEventListener(DeadlineEventListener):
 
                     self.UnearmarkForDeletion(workerSettings)
 
+    def GetFallbackMarkings(self):
+        fallbackMarkings = self.GetConfigEntryWithDefault("SherpaSpotFallbackMarkings", "")
+        return [element.strip() for element in fallbackMarkings.split(",")]
+
+    def WorkThroughTheSizeIDs(self):
+        sizeID = self.GetConfigEntryWithDefault("SizeID", "")
+        sizeIDs = [element.strip() for element in sizeID.split(",")]
+        sizeIDs = list(OrderedDict.fromkeys(sizeIDs)) # remove duplicates *whilst keeping the original order*
+
+        if len(sizeIDs) > 1:
+            self.LogInfo("Multiple size IDs: {0}".format(sizeIDs))
+
+            needle = self.GetLatestSizeID()
+
+            if needle == None:
+                sizeID = sizeIDs[0]
+
+                self.LogInfo("Use the first size ID in the list: {0}".format(sizeID))
+
+                return sizeID
+            else:
+                # let's "work through the gears"
+
+                self.LogInfo("Last attempted size ID: {0}".format(needle))
+
+                if needle in sizeIDs:
+                    if sizeIDs.index(needle) < (len(sizeIDs) - 1):
+                        sizeID = sizeIDs[sizeIDs.index(needle) + 1]
+
+                        self.LogInfo("Last attempted size ID was {0}, trying the next one up: {1}".format(needle, sizeID))
+
+                        self.RemoveWorkersWithSizeID(needle)
+
+                        return sizeID
+                    else:
+                        sizeID = needle
+
+                        self.LogInfo("Last attempted size ID was {0} and that was the last one...".format(sizeID))
+
+                        return sizeID
+                else:
+                    sizeID = sizeIDs[0]
+
+                    self.LogInfo("Last attempted size ID can not be found in the list, use the first size ID in the list: {0}".format(sizeID))
+
+                    return sizeID
+        else:
+            sizeID = sizeIDs[0]
+
+            self.LogInfo("Single size ID: {0}".format(sizeID))
+
+            return sizeID
+
+        return None
+
+    def GetLatestSizeID(self):
+        projectID = self.GetConfigEntryWithDefault("ProjectID", "")
+
+        if not projectID or projectID == None:
+            raise Exception("Please enter the desired Sherpa project ID")
+
+        # @todo implement ability to filter by specific marking(s) *and* size's tenure(s)
+        resources = GetResources(
+            self.sherpaClient,
+            projectID
+        )
+
+        fallbackMarkings = self.GetFallbackMarkings()
+
+        for resource in resources:
+            needle = resource.marking
+
+            if needle in fallbackMarkings:
+                if fallbackMarkings.index(needle):
+                    # eg. "no_capacity" could happen to on-demand as well; we want spot only...
+                    # @todo implement ability to filter by specific marking(s) *and* size's tenure(s) (see above @ GetResources)
+                    tenure = GetResourceTenure(
+                        self.sherpaClient,
+                        resource.id
+                    )
+
+                    if self.verLog:
+                        self.LogInfo("[{0}] Sherpa resource's tenure: {1}".format(resource.name, tenure))
+
+                    if tenure == TENURE_SPOT:
+                        return GetResourceSizeID(resource)
+
+        return None
+
+    def RemoveWorkersWithSizeID(self, sizeID):
+        self.LogInfo("Remove spot workers with size ID {0}".format(sizeID))
+
+        resourceIDs = []
+
+        projectID = self.GetConfigEntryWithDefault("ProjectID", "")
+
+        if not projectID or projectID == None:
+            raise Exception("Please enter the desired Sherpa project ID")
+
+        # @todo implement ability to filter by specific marking(s) *and* size's tenure(s)
+        resources = GetResources(
+            self.sherpaClient,
+            projectID
+        )
+
+        fallbackMarkings = self.GetFallbackMarkings()
+
+        for resource in resources:
+            needle = resource.marking
+
+            if needle in fallbackMarkings:
+                if fallbackMarkings.index(needle):
+                    if GetResourceSizeID(resource) == sizeID:
+                        # eg. "no_capacity" could happen to on-demand as well; we want spot only...
+                        # @todo implement ability to filter by specific marking(s) *and* size's tenure(s) (see above @ GetResources)
+                        tenure = GetResourceTenure(
+                            self.sherpaClient,
+                            resource.id
+                        )
+
+                        if self.verLog:
+                            self.LogInfo("[{0}] Sherpa resource's tenure: {1}".format(resource.name, tenure))
+
+                        if tenure == TENURE_SPOT:
+                            resourceIDs.append(resource.id)
+
+
+        if len(resourceIDs) > 0:
+            # we can just delete these from Sherpa; they never checked in as worker
+            # delete resources "en masse" as otherwise the deletion of one resource makes the other resource go back into converging
+            DeleteResources(
+                self.sherpaClient,
+                resourceIDs
+            )
+
     def RemoveDeletedWorkers(self):
         """
         Remove (Offline/Stalled) workers so they do not appear in the Monitor Worker List Panel
@@ -613,6 +760,41 @@ class SherpaEventListener(DeadlineEventListener):
                         else:
                             if self.verLog:
                                 self.LogInfo("[{0}] Postpone deletion of worker as resource is {1}".format(workerName, marking))
+
+    def DeleteExcessFallbacksFromResources(self, resources):
+        """
+        Delete fallback resources, resources that did not get provisioned
+        """
+
+        if self.stdLog:
+            self.LogInfo("Delete fallback resource(s)")
+
+        fallbackMarkings = self.GetFallbackMarkings()
+
+        resourceIDs = []
+
+        for resource in resources:
+            needle = resource.marking
+
+            if needle in fallbackMarkings:
+                tenure = GetResourceTenure(
+                    self.sherpaClient,
+                    resource.id
+                )
+
+                if self.verLog:
+                    self.LogInfo("[{0}] Sherpa fallback resource: {1}".format(resource.name, needle))
+
+                if tenure == TENURE_SPOT:
+                    resourceIDs.append(resource.id)
+
+        if len(resourceIDs) > 0:
+            # we can just delete these from Sherpa; they never checked in as worker
+            # delete resources "en masse" as otherwise the deletion of one resource makes the other resource go back into converging
+            DeleteResources(
+                self.sherpaClient,
+                resourceIDs
+            )
 
     def EarmarkForDeletion(self, workerSettings, timestamp):
         key = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
