@@ -356,7 +356,7 @@ class SherpaEventListener(DeadlineEventListener):
                         deleted = workerSettings.GetSlaveExtraInfoKeyValue(deletedKey)
 
                         if deleted == "True":
-                            return
+                            continue
 
                         timestamp = workerSettings.GetSlaveExtraInfoKeyValue(deleteTimestampKey)
 
