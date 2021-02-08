@@ -654,19 +654,18 @@ class SherpaEventListener(DeadlineEventListener):
             needle = resource.marking
 
             if needle in fallbackMarkings:
-                if fallbackMarkings.index(needle):
-                    # eg. "no_capacity" could happen to on-demand as well; we want spot only...
-                    # @todo implement ability to filter by specific marking(s) *and* size's tenure(s) (see above @ GetResources)
-                    tenure = GetResourceTenure(
-                        self.sherpaClient,
-                        resource.id
-                    )
+                # eg. "no_capacity" could happen to on-demand as well; we want spot only...
+                # @todo implement ability to filter by specific marking(s) *and* size's tenure(s) (see above @ GetResources)
+                tenure = GetResourceTenure(
+                    self.sherpaClient,
+                    resource.id
+                )
 
-                    if self.verLog:
-                        self.LogInfo("[{0}] Sherpa resource's tenure: {1}".format(resource.name, tenure))
+                if self.verLog:
+                    self.LogInfo("[{0}] Sherpa resource's tenure: {1}".format(resource.name, tenure))
 
-                    if tenure == TENURE_SPOT:
-                        return GetResourceSizeID(resource)
+                if tenure == TENURE_SPOT:
+                    return GetResourceSizeID(resource)
 
         return None
 
@@ -692,21 +691,19 @@ class SherpaEventListener(DeadlineEventListener):
             needle = resource.marking
 
             if needle in fallbackMarkings:
-                if fallbackMarkings.index(needle):
-                    if GetResourceSizeID(resource) == sizeID:
-                        # eg. "no_capacity" could happen to on-demand as well; we want spot only...
-                        # @todo implement ability to filter by specific marking(s) *and* size's tenure(s) (see above @ GetResources)
-                        tenure = GetResourceTenure(
-                            self.sherpaClient,
-                            resource.id
-                        )
+                if GetResourceSizeID(resource) == sizeID:
+                    # eg. "no_capacity" could happen to on-demand as well; we want spot only...
+                    # @todo implement ability to filter by specific marking(s) *and* size's tenure(s) (see above @ GetResources)
+                    tenure = GetResourceTenure(
+                        self.sherpaClient,
+                        resource.id
+                    )
 
-                        if self.verLog:
-                            self.LogInfo("[{0}] Sherpa resource's tenure: {1}".format(resource.name, tenure))
+                    if self.verLog:
+                        self.LogInfo("[{0}] Sherpa resource's tenure: {1}".format(resource.name, tenure))
 
-                        if tenure == TENURE_SPOT:
-                            resourceIDs.append(resource.id)
-
+                    if tenure == TENURE_SPOT:
+                        resourceIDs.append(resource.id)
 
         if len(resourceIDs) > 0:
             # we can just delete these from Sherpa; they never checked in as worker
