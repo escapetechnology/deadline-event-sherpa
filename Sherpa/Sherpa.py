@@ -403,7 +403,7 @@ class SherpaEventListener(DeadlineEventListener):
         limitGroups = RepositoryUtils.GetLimitGroups(True)
 
         self.limit_groups = {
-            limitGroup.Name: LimitSettings(limitGroup)
+            limitGroup.Name: limit_settings(limitGroup)
             for limitGroup in limitGroups
         }
 
@@ -888,3 +888,48 @@ class plugin_settings(object):
             # we don't have scripting API support for this, please update the client
             # replicate previous behavior by pretending the plugin has no assigned limits
             self.limits = []
+
+class limit_settings(object):
+    def __init__(self, limitGroup):
+        """
+        Initializes the limit_settings object.
+        Sets available stubs based on whitelist information and number of available Limits.
+        """
+        self._limitGroup = limitGroup
+
+        if limitGroup.WhitelistFlag and len(limitGroup.LimitGroupListedSlaves) > 0:
+            self.availableStubs = 0
+        else:
+            self.availableStubs = (limitGroup.Limit - limitGroup.LimitInUse) + (
+                        limitGroup.LimitGroupOverage - limitGroup.LimitGroupInOverage)
+
+    @property
+    def name(self):
+        """The name of the Limit Group"""
+        return self._limitGroup.LimitGroupName
+
+    @property
+    def is_unlimited(self):
+        """Returns a boolean based on if the Limit an Unlimited limit."""
+        return self._limitGroup.LimitGroupUnlimitedLimit
+
+    def MaxSlavesForLimit(self, concurrentTasks):
+        """
+        Returns the largest number of Workers that could be started
+        based on the available stubs for the Limit and the Limit type.
+        """
+        if self._limitGroup.LimitStubLevel == StubLevel.Task:
+            # integer division in python 2 returns an int rounded down.
+            # To avoid this, we want to cast one of the values to a float.
+            # ceil() returns a float in python 2. This may effect Target of the SFR, which needs to be an int or long.
+            # So, we're converting explicitly to an int.
+            return int(ceil(float(self.availableStubs) / concurrentTasks))
+
+        return self.availableStubs
+
+    def AdjustAvailableStubsForSlave(self, concurrentTasks, num_workers, queuedTasks):
+        """Reduces the available stubs for the Limit. Functionality changes depending on the type of the Limit."""
+        if self._limitGroup.LimitStubLevel == StubLevel.Task:
+            self.availableStubs -= min(concurrentTasks * num_workers, queuedTasks, self.availableStubs)
+        else:
+            self.availableStubs -= num_workers
