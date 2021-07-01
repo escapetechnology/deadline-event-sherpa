@@ -17,7 +17,7 @@ eventPath = RepositoryUtils.GetEventPluginDirectory("Sherpa")
 if eventPath not in sys.path:
     sys.path.append(eventPath)
 
-from SherpaUtils import TENURE_ONDEMAND, TENURE_SPOT, OPERATION_START, OPERATION_STOP, MARKING_DELETING, MARKING_DELETED, Authenticate, GetResources, ResourceHasOperation, ResourceHasEnabledOperation, GetResourceTenure, GetResourceMarking, GetResourceSizeID, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
+from SherpaUtils import TENURE_ONDEMAND, TENURE_SPOT, OPERATION_START, OPERATION_STOP, MARKING_DELETING, MARKING_DELETED, Authenticate, GetResources, ResourceHasOperation, ResourceHasEnabledOperation, GetResourceName, GetResourceTenure, GetResourceMarking, GetResourceSizeID, GetSizeTenure, StartResources, StopResources, CreateResources, DeleteResources
 
 PLUGIN_LIMITS_SUPPORTED = 'GetPluginLimitGroups' in dir(RepositoryUtils)
 
@@ -105,6 +105,8 @@ class SherpaEventListener(DeadlineEventListener):
                     # deleting a worker and letting it check in again allows a name change to be picked up
                     # we call out to Sherpa to get the name, not the data file
                     # the latter only gets stamped once and for that reason does not contain the resource name
+                    self.InitializeSherpaClient()
+
                     if self.verLog:
                         self.LogInfo("Getting Sherpa resource ({0}) name".format(id))
 
@@ -113,11 +115,13 @@ class SherpaEventListener(DeadlineEventListener):
                         id
                     )
 
-                    if self.verLog:
-                        self.LogInfo("Saving Sherpa name as description: {0}".format(name))
+                    if name is not None:
+                        if self.verLog:
+                            self.LogInfo("Saving Sherpa resource ({0}) name as worker description: {1}".format(id, name))
 
-                    workerSettings.SlaveDescription = name
-                    RepositoryUtils.SaveSlaveSettings(workerSettings)
+                        workerSettings.SlaveDescription = name
+                        RepositoryUtils.SaveSlaveSettings(workerSettings)
+
                 if self.verLog:
                     self.LogInfo("id: {0}, @type: {1}".format(data['id'], data['@type']))
         except IOError:
