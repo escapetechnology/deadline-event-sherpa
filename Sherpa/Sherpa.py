@@ -82,9 +82,9 @@ class SherpaEventListener(DeadlineEventListener):
 
                 data = json.load(json_file)
 
-                slaveSettings = RepositoryUtils.GetSlaveSettings(slaveName, True)
+                workerSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
                 key = self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID")
-                value = slaveSettings.GetSlaveExtraInfoKeyValue(key)
+                value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
                 if not value or value == None:
                     id = data['id']
@@ -92,13 +92,29 @@ class SherpaEventListener(DeadlineEventListener):
                     if self.verLog:
                         self.LogInfo("Saving Sherpa ID as extra info key/value pair: {0} (key) + {1} (value)".format(key, id))
 
-                    dict = slaveSettings.SlaveExtraInfoDictionary
+                    dict = workerSettings.SlaveExtraInfoDictionary
 
                     dict.Add(key, id)
 
-                    slaveSettings.SlaveExtraInfoDictionary = dict
-                    RepositoryUtils.SaveSlaveSettings(slaveSettings)
+                    workerSettings.SlaveExtraInfoDictionary = dict
+                    RepositoryUtils.SaveSlaveSettings(workerSettings)
 
+                    # deleting a worker and letting it check in again allows a name change to be picked up
+                    # we call out to Sherpa to get the name, not the data file
+                    # the latter only gets stamped once and for that reason does not contain the resource name
+                    if self.verLog:
+                        self.LogInfo("Getting Sherpa resource ({0}) name".format(id))
+
+                    name = GetResourceName(
+                        self.sherpaClient,
+                        id
+                    )
+
+                    if self.verLog:
+                        self.LogInfo("Saving Sherpa name as description: {0}".format(name))
+
+                    workerSettings.SlaveDescription = name
+                    RepositoryUtils.SaveSlaveSettings(workerSettings)
                 if self.verLog:
                     self.LogInfo("id: {0}, @type: {1}".format(data['id'], data['@type']))
         except IOError:
