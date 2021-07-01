@@ -190,8 +190,6 @@ class SherpaEventListener(DeadlineEventListener):
                                 self.sherpaClient,
                                 [resourceID]
                             )
-
-                        count += 1
                     else:
                         if self.verLog:
                             self.LogInfo("[{0}] Resource ({1}) does not have enabled operation ({2})".format(workerName, resourceID, operation))
