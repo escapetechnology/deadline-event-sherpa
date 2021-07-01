@@ -97,6 +97,18 @@ def ResourceHasEnabledOperation(apiClient, resourceID, enabled_operation):
 
     return False
 
+def GetResourceName(apiClient, resourceID):
+    api_instance = sherpa.NodeApi(apiClient)
+
+    try:
+        api_response = api_instance.get_node_item(resourceID)
+
+        return api_response.name
+    except ApiException as e:
+        print("Exception when calling NodeApi->get_node_item: %s\n" % e)
+
+    return None
+
 def GetResourceTenure(apiClient, resourceID):
     api_instance = sherpa.NodeApi(apiClient)
 
