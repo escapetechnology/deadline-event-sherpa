@@ -61,7 +61,7 @@ class SherpaEventListener(DeadlineEventListener):
         del self.OnIdleShutdownCallback
         del self.OnHouseCleaningCallback
 
-    def OnSlaveStarted(self, slaveName):
+    def OnSlaveStarted(self, workerName):
         self.GetLogLevel()
 
         dataFile = None
@@ -124,7 +124,7 @@ class SherpaEventListener(DeadlineEventListener):
             if self.verLog:
                 self.LogWarning("Sherpa data file ({0}) could not be read".format(dataFile))
 
-    def OnMachineStartup(self, groupName, slaveNames, MachineStartupOptions):
+    def OnMachineStartup(self, groupName, workerNames, MachineStartupOptions):
         self.GetLogLevel()
 
         if self.GetBooleanConfigEntryWithDefault("EnablePowerManagement", False) is False:
@@ -136,9 +136,9 @@ class SherpaEventListener(DeadlineEventListener):
         if self.stdLog:
             self.LogInfo("Sherpa event plugin - OnMachineStartup")
 
-        self.handleStartStop(OPERATION_START, slaveNames)
+        self.handleStartStop(OPERATION_START, workerNames)
 
-    def OnIdleShutdown(self, groupName, slaveNames, IdleShutdownOptions):
+    def OnIdleShutdown(self, groupName, workerNames, IdleShutdownOptions):
         self.GetLogLevel()
 
         if self.GetBooleanConfigEntryWithDefault("EnablePowerManagement", False) is False:
@@ -150,7 +150,7 @@ class SherpaEventListener(DeadlineEventListener):
         if self.stdLog:
             self.LogInfo("Sherpa event plugin - OnIdleShutdown")
 
-        self.handleStartStop(OPERATION_STOP, slaveNames)
+        self.handleStartStop(OPERATION_STOP, workerNames)
 
     def handleStartStop(self, operation, workerNames):
         if len(workerNames) < 1:
@@ -159,9 +159,9 @@ class SherpaEventListener(DeadlineEventListener):
         self.InitializeSherpaClient()
 
         for workerName in workerNames:
-            slaveSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
+            workerSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
             identifierKey = self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID")
-            resourceID = slaveSettings.GetSlaveExtraInfoKeyValue(identifierKey)
+            resourceID = workerSettings.GetSlaveExtraInfoKeyValue(identifierKey)
 
             if self.verLog:
                 self.LogInfo("[{0}] Worker's resource ID: {1}".format(workerName, resourceID))
