@@ -133,26 +133,13 @@ class SherpaEventListener(DeadlineEventListener):
 
         self.handleStartStop(OPERATION_STOP, slaveNames)
 
-    def handleStartStop(self, operation, slaveNames):
+    def handleStartStop(self, operation, workerNames):
+        if len(workerNames) < 1:
+            return
+
         self.InitializeSherpaClient()
 
-        slaveNames_parameter = slaveNames
-        maximum = len(slaveNames_parameter)
-
-        workerNames = RepositoryUtils.GetSlaveNames(True)
-
-        if self.verLog:
-            self.LogInfo("{0} a maximum of {1} workers".format(operation.capitalize(), maximum))
-
-        count = 1
-
         for workerName in workerNames:
-            if count > maximum:
-                if self.verLog:
-                    self.LogInfo("Maximum ({0}) reached".format(maximum))
-
-                break
-
             slaveSettings = RepositoryUtils.GetSlaveSettings(workerName, True)
             identifierKey = self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID")
             resourceID = slaveSettings.GetSlaveExtraInfoKeyValue(identifierKey)
@@ -188,7 +175,7 @@ class SherpaEventListener(DeadlineEventListener):
                         count += 1
                     else:
                         if self.verLog:
-                            self.LogInfo("[{0}] Resource ({1}) does not have enabled_operation ({2})".format(workerName, resourceID, operation))
+                            self.LogInfo("[{0}] Resource ({1}) does not have enabled operation ({2})".format(workerName, resourceID, operation))
                 else:
                     if self.verLog:
                         self.LogInfo("[{0}] Resource ({1}) does not have operation ({2})".format(workerName, resourceID, operation))
