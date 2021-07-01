@@ -21,6 +21,7 @@ from SherpaUtils import TENURE_ONDEMAND, TENURE_SPOT, OPERATION_START, OPERATION
 
 PLUGIN_LIMITS_SUPPORTED = 'GetPluginLimitGroups' in dir(RepositoryUtils)
 
+
 ####################################################################
 ## This is the function called by Deadline to get an instance of the
 ## Sherpa event listener.
@@ -28,12 +29,14 @@ PLUGIN_LIMITS_SUPPORTED = 'GetPluginLimitGroups' in dir(RepositoryUtils)
 def GetDeadlineEventListener():
     return SherpaEventListener()
 
+
 ####################################################################
 ## This is the function called by Deadline when the event plugin is
 ## no longer in use, so that it can get cleaned up.
 ####################################################################
 def CleanupDeadlineEventListener(deadlinePlugin):
     deadlinePlugin.Cleanup()
+
 
 ###############################################################
 ## The Sherpa base event listener class.
@@ -69,7 +72,7 @@ class SherpaEventListener(DeadlineEventListener):
         if platform.system() == "Windows":
             dataFile = self.GetConfigEntryWithDefault("DataFileWindows", "")
 
-        if not dataFile or dataFile == None:
+        if not dataFile or dataFile is None:
             self.LogWarning("Please enter the desired data file for this OS")
         else:
             if self.verLog:
@@ -86,7 +89,7 @@ class SherpaEventListener(DeadlineEventListener):
                 key = self.GetConfigEntryWithDefault("SherpaIdentifierKey", "Sherpa_ID")
                 value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
-                if not value or value == None:
+                if not value or value is None:
                     id = data['id']
 
                     if self.verLog:
@@ -124,7 +127,7 @@ class SherpaEventListener(DeadlineEventListener):
     def OnMachineStartup(self, groupName, slaveNames, MachineStartupOptions):
         self.GetLogLevel()
 
-        if self.GetBooleanConfigEntryWithDefault("EnablePowerManagement", False) == False:
+        if self.GetBooleanConfigEntryWithDefault("EnablePowerManagement", False) is False:
             if self.verLog:
                 self.LogInfo("Sherpa event plugin - power management is not enabled")
 
@@ -138,7 +141,7 @@ class SherpaEventListener(DeadlineEventListener):
     def OnIdleShutdown(self, groupName, slaveNames, IdleShutdownOptions):
         self.GetLogLevel()
 
-        if self.GetBooleanConfigEntryWithDefault("EnablePowerManagement", False) == False:
+        if self.GetBooleanConfigEntryWithDefault("EnablePowerManagement", False) is False:
             if self.verLog:
                 self.LogInfo("Sherpa event plugin - power management is not enabled")
 
@@ -202,7 +205,7 @@ class SherpaEventListener(DeadlineEventListener):
     def OnHouseCleaning(self):
         self.GetLogLevel()
 
-        if self.GetBooleanConfigEntryWithDefault("EnableSpotManagement", False) == False:
+        if self.GetBooleanConfigEntryWithDefault("EnableSpotManagement", False) is False:
             if self.verLog:
                 self.LogInfo("Sherpa event plugin - spot management is not enabled")
 
@@ -256,7 +259,7 @@ class SherpaEventListener(DeadlineEventListener):
 
         projectID = self.GetConfigEntryWithDefault("ProjectID", "")
 
-        if not projectID or projectID == None:
+        if not projectID or projectID is None:
             raise Exception("Please enter the desired Sherpa project ID")
 
         currentNumberOfResources = 0
@@ -288,13 +291,13 @@ class SherpaEventListener(DeadlineEventListener):
             imageID = self.GetConfigEntryWithDefault("ImageID", "")
             volumeSize = self.GetIntegerConfigEntryWithDefault("VolumeSize", 32)
 
-            if not projectID or projectID == None:
+            if not projectID or projectID is None:
                 raise Exception("Please enter the desired Sherpa project ID")
 
-            if not prefix or prefix == None:
+            if not prefix or prefix is None:
                 raise Exception("Please enter the desired resource name")
 
-            if not sizeID or sizeID == None:
+            if not sizeID or sizeID is None:
                 raise Exception("Please enter the desired Sherpa size ID")
 
             tenure = GetSizeTenure(
@@ -308,10 +311,10 @@ class SherpaEventListener(DeadlineEventListener):
             if tenure != TENURE_SPOT:
                 raise Exception("Please provide a size that has a spot tenure")
 
-            if not imageID or imageID == None:
+            if not imageID or imageID is None:
                 raise Exception("Please enter the desired Sherpa image ID")
 
-            if not volumeSize or volumeSize == None:
+            if not volumeSize or volumeSize is None:
                 raise Exception("Please enter the desired resource volume size")
 
             CreateResources(
@@ -463,8 +466,8 @@ class SherpaEventListener(DeadlineEventListener):
             job_has_machine_whitelist = job.JobWhitelistFlag and len(job.JobListedSlaves) > 0
 
             if (
-                not job_has_machine_whitelist
-                and not job.IsCorrupted()
+                not job_has_machine_whitelist and
+                not job.IsCorrupted()
             ):
                 yield job
 
@@ -591,14 +594,14 @@ class SherpaEventListener(DeadlineEventListener):
     def WorkThroughTheSizeIDs(self):
         sizeID = self.GetConfigEntryWithDefault("SizeID", "")
         sizeIDs = [element.strip() for element in sizeID.split(",")]
-        sizeIDs = list(OrderedDict.fromkeys(sizeIDs)) # remove duplicates *whilst keeping the original order*
+        sizeIDs = list(OrderedDict.fromkeys(sizeIDs))  # remove duplicates *whilst keeping the original order*
 
         if len(sizeIDs) > 1:
             self.LogInfo("Multiple size IDs: {0}".format(sizeIDs))
 
             needle = self.GetLatestSizeID()
 
-            if needle == None:
+            if needle is None:
                 sizeID = sizeIDs[0]
 
                 self.LogInfo("Use the first size ID in the list: {0}".format(sizeID))
@@ -642,7 +645,7 @@ class SherpaEventListener(DeadlineEventListener):
     def GetLatestSizeID(self):
         projectID = self.GetConfigEntryWithDefault("ProjectID", "")
 
-        if not projectID or projectID == None:
+        if not projectID or projectID is None:
             raise Exception("Please enter the desired Sherpa project ID")
 
         # @todo implement ability to filter by specific marking(s) *and* size's tenure(s)
@@ -679,7 +682,7 @@ class SherpaEventListener(DeadlineEventListener):
 
         projectID = self.GetConfigEntryWithDefault("ProjectID", "")
 
-        if not projectID or projectID == None:
+        if not projectID or projectID is None:
             raise Exception("Please enter the desired Sherpa project ID")
 
         # @todo implement ability to filter by specific marking(s) *and* size's tenure(s)
@@ -722,7 +725,7 @@ class SherpaEventListener(DeadlineEventListener):
         to avoid filling up the list with Workers that will never reconnect.
         """
 
-        if self.GetBooleanConfigEntryWithDefault("RemoveDeletedWorkers", False) == True:
+        if self.GetBooleanConfigEntryWithDefault("RemoveDeletedWorkers", False) is True:
             if self.stdLog:
                 self.LogInfo("Remove deleted worker(s)")
 
@@ -800,7 +803,7 @@ class SherpaEventListener(DeadlineEventListener):
         key = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
         value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
-        if not value or value == None:
+        if not value or value is None:
             value = str(timestamp)
 
             if self.verLog:
@@ -817,7 +820,7 @@ class SherpaEventListener(DeadlineEventListener):
         key = self.GetConfigEntryWithDefault("SherpaDeleteTimestampKey", "Sherpa_DeleteTimestamp")
         value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
-        if value != None:
+        if value is not None:
             if self.verLog:
                 self.LogInfo("Removing delete timestamp extra info key/value pair: {0} (key) + {1} (value)".format(key, value))
 
@@ -832,7 +835,7 @@ class SherpaEventListener(DeadlineEventListener):
         key = self.GetConfigEntryWithDefault("SherpaDeletedKey", "Sherpa_Deleted")
         value = workerSettings.GetSlaveExtraInfoKeyValue(key)
 
-        if not value or value == None:
+        if not value or value is None:
             if self.verLog:
                 self.LogInfo("Saving deleted as extra info key/value pair: {0} (key) + {1} (value)".format(key, value))
 
@@ -859,6 +862,7 @@ class SherpaEventListener(DeadlineEventListener):
 
         self.sherpaClient = Authenticate(endpoint, key, secret)
 
+
 class key_arg_defaultdict(defaultdict):
     """A subclass of defaultdict that passes in arguments for missing keys,
     the default factory does not"""
@@ -870,6 +874,7 @@ class key_arg_defaultdict(defaultdict):
         ret = self[key] = self.default_factory(key)
 
         return ret
+
 
 class plugin_settings(object):
     """Stores the concurrent task enabled/disabled information for a plugin"""
@@ -891,6 +896,7 @@ class plugin_settings(object):
             # we don't have scripting API support for this, please update the client
             # replicate previous behavior by pretending the plugin has no assigned limits
             self.limits = []
+
 
 class limit_settings(object):
     def __init__(self, limitGroup):
