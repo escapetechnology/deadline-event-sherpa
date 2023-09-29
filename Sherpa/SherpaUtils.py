@@ -1,5 +1,4 @@
 import random
-import string
 import sys
 
 from Deadline.Scripting import RepositoryUtils
@@ -122,7 +121,7 @@ def GetResourceTenure(apiClient, resourceID):
     return None
 
 def GetResourceSizeID(resource):
-    return string.replace(resource.size, "/sizes/", "")
+    return resource.size.replace("/sizes/", "")
 
 def GetSizeTenure(apiClient, sizeID):
     api_instance = sherpa.SizeApi(apiClient)
@@ -199,8 +198,8 @@ def CreateResources(apiClient, projectID, prefix, sizeID, imageID, volumeSize, c
         api_instance = sherpa.ProjectApi(apiClient)
         api_response = api_instance.get_project_item(id=projectID)
 
-        providerID = string.replace(api_response.providers[0], "/providers/", "")
-        regionID = string.replace(api_response.regions[0], "/regions/", "")
+        providerID = api_response.providers[0].replace("/providers/", "")
+        regionID = api_response.regions[0].replace("/regions/", "")
 
         service_api_instance = sherpa.ServiceApi(apiClient)
 
