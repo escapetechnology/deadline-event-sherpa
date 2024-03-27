@@ -43,6 +43,9 @@ def CleanupDeadlineEventListener(deadlinePlugin):
 ###############################################################
 class SherpaEventListener(DeadlineEventListener):
     def __init__(self):
+        if sys.version_info.major == 3:
+            super().__init__()
+
         self.stdLog = False
         self.verLog = False
         self.debugLog = False
